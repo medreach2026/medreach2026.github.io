@@ -2422,7 +2422,8 @@ function visaoTab(){
                 const contact = TEAM_CONTACTS[name];
                 if(!contact) return '<span style="background:#e0e7ff;color:#4338ca;border-radius:3px;padding:0 3px;font-weight:700">@'+name+'</span>';
                 const taskSubj = encodeURIComponent('📋 To Do: ' + t.text.replace(/@\w+/g,'').trim());
-                const taskBody = encodeURIComponent('Olá ' + name + ',\n\nVocê foi mencionado em uma tarefa no MED REACH 2026:\n\n➤ ' + t.text + '\n\nAcesse o dashboard para mais detalhes.\n\nAbs,\nTime Medical Affairs CWM');
+                const dashboardPath = 'https://medreach2026.github.io/';
+                const taskBody = encodeURIComponent('Olá ' + name + ',\n\nVocê foi mencionado em uma tarefa no MED REACH 2026:\n\n➤ ' + t.text + '\n\nAcesse o dashboard para mais detalhes:\n' + dashboardPath + '\n\nAbs,\nTime Medical Affairs CWM');
                 const mailLink = contact.email ? 'mailto:' + contact.email + '?subject=' + taskSubj + '&body=' + taskBody : null;
                 const teamsLink = contact.teams ? 'https://teams.microsoft.com/l/chat/0/0?users=' + contact.teams + '&message=' + encodeURIComponent('📋 ' + t.text) : null;
                 return '<span style="display:inline-flex;align-items:center;gap:3px">'
