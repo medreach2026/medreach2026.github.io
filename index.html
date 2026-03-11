@@ -1699,12 +1699,12 @@ function handle(ev){
     case 'togCat': S.budOpenCat=S.budOpenCat===el.dataset.cat?null:el.dataset.cat; render(); break;
     case 'upBud':{
       const l=budgetLines.find(x=>x.id===parseInt(el.dataset.lid));
-      if(l)l[el.dataset.f]=Number(el.value)||0;break;
+      if(l){l[el.dataset.f]=Number(el.value)||0; lsSave();} break;
     }
 
     case 'cycTask':{
       const t=liveTasks.find(x=>x.id===el.dataset.tid);
-      if(t){t.status=t.status==='Não Iniciada'?'Em Progresso':t.status==='Em Progresso'?'Concluída':'Não Iniciada';render();}break;
+      if(t){t.status=t.status==='Não Iniciada'?'Em Progresso':t.status==='Em Progresso'?'Concluída':'Não Iniciada';render();lsSave();}break;
     }
     case 'editTask': S.editTask=el.dataset.tid; S.modal='editTask'; render(); break;
     case 'saveTask':{
@@ -1718,9 +1718,9 @@ function handle(ev){
         t.status=f.querySelector('[name="ts"]')?.value||t.status;
         t.prio=f.querySelector('[name="tp"]')?.value||t.prio;
       }
-      S.modal=null; S.editTask=null; toast('✅ Tarefa salva!'); break;
+      S.modal=null; S.editTask=null; toast('✅ Tarefa salva!'); lsSave(); break;
     }
-    case 'delTask': liveTasks=liveTasks.filter(x=>x.id!==el.dataset.tid); toast('🗑️ Tarefa excluída.','info'); break;
+    case 'delTask': liveTasks=liveTasks.filter(x=>x.id!==el.dataset.tid); toast('🗑️ Tarefa excluída.','info'); lsSave(); break;
     case 'addTask':{
       const lid=parseInt(el.dataset.lid), lv=LIVES.find(l=>l.id===lid);
       const nt={id:`${lid}-${Date.now()}`,liveId:lid,nome:'Nova Tarefa',resp:'MED',deadline:lv?.data||'',status:'Não Iniciada',prio:'Média',dias:0,notas:''};
@@ -1732,7 +1732,7 @@ function handle(ev){
       const f=document.querySelector('.modal');
       const g=n=>f.querySelector(`[name="${n}"]`)?.value||'';
       checklistItems.push({id:'c'+Date.now(),person:g('cl_person'),activity:g('cl_act'),task:g('cl_task'),status:g('cl_status')||'nao_iniciada',deadline:g('cl_deadline'),notes:g('cl_notes')});
-      S.modal=null; toast('✅ Tarefa criada!'); break;
+      S.modal=null; toast('✅ Tarefa criada!'); lsSave(); break;
     }
     case 'editCL': S.editCLid=el.dataset.cid; S.modal='editCL'; render(); break;
     case 'saveCL':{
@@ -1746,16 +1746,16 @@ function handle(ev){
         item.status=f.querySelector('[name="cl_status"]')?.value||item.status;
         item.notes=f.querySelector('[name="cl_notes"]')?.value||'';
       }
-      S.modal=null; S.editCLid=null; toast('✅ Tarefa salva!'); break;
+      S.modal=null; S.editCLid=null; toast('✅ Tarefa salva!'); lsSave(); break;
     }
-    case 'delCL': checklistItems=checklistItems.filter(x=>x.id!==el.dataset.cid); toast('🗑️ Tarefa excluída.','info'); break;
+    case 'delCL': checklistItems=checklistItems.filter(x=>x.id!==el.dataset.cid); toast('🗑️ Tarefa excluída.','info'); lsSave(); break;
     case 'upCLStatus':{
       const item=checklistItems.find(x=>x.id===el.dataset.cid);
       if(item){
         const cycle={nao_iniciada:'em_andamento',em_andamento:'concluida',concluida:'nao_iniciada'};
         item.status=cycle[item.status]||'nao_iniciada';
       }
-      render(); break;
+      render(); lsSave(); break;
     }
     case 'todoAdd':
       S.todoForm='new'; S.todoEdit={text:'',owner:'Bianca'};
@@ -1778,17 +1778,17 @@ function handle(ev){
           if(TODO_ITEMS[ti]){ TODO_ITEMS[ti].text=txt; TODO_ITEMS[ti].owner=S.todoEdit?.owner||TODO_ITEMS[ti].owner; }
         }
       }
-      S.todoForm=false; S.todoEdit={text:'',owner:'Bianca'}; render(); break;
+      S.todoForm=false; S.todoEdit={text:'',owner:'Bianca'}; render(); lsSave(); break;
     }
     case 'todoDone':{
       const ti=parseInt(el.dataset.ti);
       if(TODO_ITEMS[ti]) TODO_ITEMS[ti].done=!TODO_ITEMS[ti].done;
-      render(); break;
+      render(); lsSave(); break;
     }
     case 'todoDel':{
       const ti=parseInt(el.dataset.ti);
       TODO_ITEMS.splice(ti,1);
-      render(); break;
+      render(); lsSave(); break;
     }
     case 'todoSave':{
       const txt=(document.getElementById('todoInput')?.value||'').trim();
@@ -2880,6 +2880,56 @@ function theboxTab(){
 }
 
 
+// ═══════════════════════════════════════════════════════════
+// PERSISTÊNCIA LOCAL — localStorage
+// Salva automaticamente no browser de cada usuário
+// ═══════════════════════════════════════════════════════════
+const LS_KEY = 'medreach2026_v1';
+
+function lsSave(){
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      todos:     TODO_ITEMS,
+      checklist: checklistItems.map(i=>({id:i.id, status:i.status, notes:i.notes||''})),
+      lives:     liveTasks.map(t=>({id:t.id, status:t.status})),
+      budget:    budgetLines.map(l=>({id:l.id, q1:l.q1, q2:l.q2, q3:l.q3, q4:l.q4, real:l.real})),
+      savedAt:   new Date().toISOString()
+    }));
+  } catch(e){ console.warn('localStorage save error:', e); }
+}
+
+function lsLoad(){
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return;
+    const data = JSON.parse(raw);
+
+    if(data.todos?.length)
+      TODO_ITEMS = data.todos;
+
+    if(data.checklist?.length)
+      checklistItems = checklistItems.map(i=>{
+        const s = data.checklist.find(x=>x.id===i.id);
+        return s ? {...i, status:s.status, notes:s.notes||i.notes} : i;
+      });
+
+    if(data.lives?.length)
+      liveTasks = liveTasks.map(t=>{
+        const s = data.lives.find(x=>x.id===t.id);
+        return s ? {...t, status:s.status} : t;
+      });
+
+    if(data.budget?.length)
+      budgetLines = budgetLines.map(l=>{
+        const s = data.budget.find(x=>x.id===l.id);
+        return s ? {...l, q1:s.q1, q2:s.q2, q3:s.q3, q4:s.q4, real:s.real} : l;
+      });
+
+  } catch(e){ console.warn('localStorage load error:', e); }
+}
+
+// Carrega dados salvos e renderiza
+lsLoad();
 render();
 </script>
 </body>
