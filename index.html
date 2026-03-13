@@ -242,8 +242,8 @@ footer {
             <div class="select-wrap">
               <select id="sex">
                 <option value="">Selecione...</option>
-                <option value="F">Feminino</option>
-                <option value="M">Masculino</option>
+                <option value="Female">Feminino</option>
+                <option value="Male">Masculino</option>
               </select>
             </div>
           </div>
@@ -390,7 +390,7 @@ function calculate() {
   if (!weight||weight<40||weight>300)  miss.push('Peso (40–300 kg)');
   if (!height||height<120||height>250) miss.push('Altura (120–250 cm)');
   if (!age||age<18||age>80)            miss.push('Idade (18–80 anos)');
-  if (!sex)     miss.push('Sexo biológico');
+  if (!sex)     miss.push('Sexo biológico');  // sex = 'Female' ou 'Male'
   if (!dose)    miss.push('Dose');
   if (!glycemic)miss.push('Status glicêmico');
   if (miss.length){ alert('Por favor, preencha corretamente:\n• '+miss.join('\n• ')); return; }
